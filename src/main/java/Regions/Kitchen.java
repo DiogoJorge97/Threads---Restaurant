@@ -13,39 +13,13 @@ import java.io.IOException;
 public class Kitchen {
 
     private final Bar bar;
-    /**
-     * Condição de terminação do ciclo de vida do chefe.
-     */
     private boolean HasTheOrderBeenCompleted;
-
-    /**
-     * Ponto de imposição de exclusão mútua no acesso à região crítica.
-     */
     private final Semaphore access;
-
-    /**
-     * Ponto de sincronização do chefe enquando aguarda uma encomenda.
-     */
     private final Semaphore chefWatchingTheNews;
-    /**
-     * Ponto de sincronização do empregado de mesa enquanto aguarda comunicar o
-     * chefe sobre a encomenda.
-     */
     private final Semaphore waiterHandTheNoteToTheChef;
-
     private final Semaphore chefWaitingForDelivery;
-
-    /**
-     * Ponto de sincronização do chefe enquanto aguarda a entrega de uma porção.
-     *
-     */
     private final Semaphore chefWaitingForPortionDelivery;
-
     private final Semaphore waitsForOrder;
-
-    /**
-     * Ponto de sincronização para quando o waiter está a espera de uma porção.
-     */
     private final Semaphore waiterWaitingForPortion;
 
     private int CourseCounter;
@@ -53,8 +27,8 @@ public class Kitchen {
     private GeneralRepo gr;
 
     public Kitchen(Bar bar, GeneralRepo gr) {
-        this.bar = bar;     //TODO check if it is needed
-        this.CourseCounter = 0;
+        this.bar = bar;    
+        this.CourseCounter = 1;
         this.PortionCounter = 0;
         this.access = new Semaphore();
         this.chefWaitingForDelivery = new Semaphore();
@@ -67,133 +41,154 @@ public class Kitchen {
         this.gr=gr;
     }
 
+
     /**
-     * Operação de aguardar por uma encomenda.
+     * Chef watches the news waiting for orders
+     * @throws IOException 
      */
     public void WatchTheNews() throws IOException {
-        System.out.println("Kitchen     Chef        Watch the news");
+//        System.out.println("Kitchen     Chef        Watch the news");
         gr.updateChefState(Chef_State.WFO);
         chefWatchingTheNews.down();
     }
-
+    
+    /**
+     * Waiter hands order to the chef
+     * @throws IOException 
+     */
     public void handTheNoteToTheChef() throws IOException {
-//        waitsForOrder.down();
         access.down();
-        System.out.println("Kitchen     Waiter      Hand the note to the chef");
+//        System.out.println("Kitchen     Waiter      Hand the note to the chef");
         gr.updateWaiterState(Waiter_State.PTO);
         chefWatchingTheNews.up();
         access.up();
-//        waiterHandTheNoteToTheChef.down();
     }
 
-//    public void waitsForOrderUp() {
-//        waitsForOrder.up();
-//    }
+    /**
+     * Chef starts preparing the first course
+     * @throws IOException 
+     */
     public void StartPreparation() throws IOException {
         access.down();
-        System.out.println("Kitchen     Chef        Start Course Preparation");
+//        System.out.println("Kitchen     Chef        Start Course Preparation");
         gr.updateChefState(Chef_State.PTC);
         //increase course counter in repo by 1
         access.up();
     }
 
+    
+    /**
+     * Chef proceeds to dishing the portions
+     * @throws IOException 
+     */
     public void ProceedToPresentation() throws IOException {
         access.down();
-        System.out.println("Kitchen     Chef        Proceed to presentation");
+//        System.out.println("Kitchen     Chef        Proceed to presentation");
         gr.updateChefState(Chef_State.DIP);
         access.up();
 
     }
 
     /**
-     * Operação de alertar o empregado de mesa que uma porção está pronta a
-     * entregar.
+     * Chef alerts the waiter to deliver the dishes 
+     * @param deliveredCount
+     * @throws IOException 
      */
-    public void AlertTheWaiter(int st) throws IOException {
-//        chefWaitingForPortionDelivery.down();
+    public void AlertTheWaiter(int deliveredCount) throws IOException {
         access.down();
-        System.out.println("Kitchen     Chef        Alert the waiter");
+//        System.out.println("Kitchen     Chef        Alert the waiter");
         bar.CallTheWaitertoServe();
-        if (st == 0) {
+        if (deliveredCount == 0) {
             bar.waiterInTheBarUp();
-            System.out.println("Kitchen     Chef        Alert the waiter Up");
+//            System.out.println("Kitchen     Chef        Alert the waiter Up");
         }
         gr.updateChefState(Chef_State.DLP);
         access.up();
         waiterWaitingForPortion.up();
     }
 
+    /**
+     * Waiter collects cooked portion
+     * @throws IOException 
+     */
     public void collectPortion() throws IOException {
         waiterWaitingForPortion.down();
         access.down();
-        System.out.println("Kitchen     Waiter      Collect Portion " + PortionCounter);
+//        System.out.println("Kitchen     Waiter      Collect Portion " + PortionCounter);
         gr.updateWaiterState(Waiter_State.WFP);
-//        chefWaitingForPortionDelivery.up();
         PortionCounter++;
         access.up();
     }
 
+    /**
+     * Waiter informs chef that he has delivered the dish
+     */
     public void chefWaitingForDeliveryUp() {
         chefWaitingForDelivery.up();
     }
 
     /**
-     * Operação para confirmar a entrega de todas as porções.
-     *
+     * Chef checks if all portions have been delivered
      * @param StudentSize
-     * @return
+     * @return true of false
      */
     public boolean AllPortionsBeenDelivered(int StudentSize) {
         if (PortionCounter == StudentSize) {
-            System.out.println("Kitchen     Chef        All Portions Delivered");
+//            System.out.println("Kitchen     Chef        All Portions Delivered");
             return true;
         }
         return false;
     }
 
+
     /**
-     * Operação para preparação da próxima porção.
+     * Chef starts preparing next portion
+     * @throws IOException 
      */
     public void haveNextPortionReady() throws IOException {
         chefWaitingForDelivery.down();
         access.down();
         gr.updateChefState(Chef_State.DIP);
-        System.out.println("Kitchen     Chef        Have Next Portion Ready");
+//        System.out.println("Kitchen     Chef        Have Next Portion Ready");
         access.up();
 
     }
 
     /**
-     * Operação para ínicio do próximo prato (entrada, principal, sobremesa).
-     *
+     * Chef prepares next course and increments courseCounter
      * @param MaxRound
+     * @throws IOException 
      */
     public void ContinuePreparation(int MaxRound) throws IOException {
         bar.waitingForStudentsToFinishDown();
         access.down();
-        System.out.println("Kitchen     Chef        Continue Preparation");
+//        System.out.println("Kitchen     Chef        Continue Preparation");
         gr.updateChefState(Chef_State.PTC);
         PortionCounter = 0;
         CourseCounter++;
-        if (CourseCounter == MaxRound - 1) {
+        if (CourseCounter == MaxRound) {
             HasTheOrderBeenCompleted = true;
         }
+        gr.updateCourse(CourseCounter);
         access.up();
     }
 
     /**
-     * Operação de fecho.
+     * Chef cleans up and gets ready to leave
+     * @throws IOException 
      */
     public void cleanup() throws IOException {
         access.down();
-        System.out.println("Kitchen     Chef        Cleanup");
+//        System.out.println("Kitchen     Chef        Cleanup");
         gr.updateChefState(Chef_State.CTS);
         access.up();
 
     }
 
-    //Métodos do Waiter
-    //Other Methods
+    /**
+     * Chef checks if order is completed 
+     * @return true or false
+     */
     public boolean HaveTheOrderBeenCompleted() {
         return HasTheOrderBeenCompleted;
     }

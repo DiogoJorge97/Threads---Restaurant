@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package Entities;
 
 import Entities_states.Student_State;
@@ -20,44 +15,30 @@ import java.util.logging.Logger;
  */
 public class Student extends Thread {
 
-    /*
-        Student actions' regions
-        Going to the restaurant - None
-        Taking a seat at the table - table
-        Selecting the courses - table
-        Organizing the order - table
-        Chatting with companions - table
-        Enjoying the meal - table
-        Paying the bill - table
-        Going home - table
-     */
     //Student stats
-    private Student_State state;
     private final Table table;
     private final Bar bar;
     private final int MCourses;
     private final int MaxStudents;
-    private int studentID;
-    private GeneralRepo gr;
+    private final int studentID;
 
+
+    
     public Student(Table table, Bar bar, int MCourses, int MaxStudents, int id) {
         this.table = table;
         this.bar = bar;
         this.MCourses = MCourses;
         this.MaxStudents = MaxStudents;
         this.studentID = id;
-        //gr.updateStudentState(Student_State.GTR, studentID);
-
     }
 
-    //Teacher Method
     @Override
     public void run() {
         try {
             WalkABit();
             int arrivalOrder;
             arrivalOrder = table.enter(studentID);
-            table.readTheMenu(studentID); //TODO delete entry variable, only used for print
+            table.readTheMenu(studentID); 
             if (arrivalOrder == 1) {
                 while (!table.hasEverybodyChosen()) {
                     table.prepareTheOrder(studentID);
@@ -70,17 +51,16 @@ public class Student extends Thread {
             }
 
             for (int i = 0; i < MCourses; i++) {
-                table.startEating(studentID);   //TODO delete entry variable, only used for print
-                table.endEating(studentID); //TODO delete entry variable, only used for print
+                table.startEating(studentID);  
+                table.endEating(studentID);
                 if (table.hasEverybodyFinished(i)) {
-//            if (table.hasEverybodyFinished()) {
                     if (i != (MCourses - 1)) {
                         bar.SignalTheWaiter();
                     }
                 }
             }
             if (arrivalOrder == (MaxStudents)) {
-                table.shouldHaveArrivedEarlier(studentID);  //TODO delete entry variable, only used for print
+                table.shouldHaveArrivedEarlier(studentID); 
                 table.honorTheBill();
             }
             table.exit(studentID);
@@ -92,18 +72,9 @@ public class Student extends Thread {
 
     private void WalkABit() {
         try {
-            Thread.sleep(1000);    //TODO make random
+            Thread.sleep((long) ((Math.random()*1500)+500));    
         } catch (InterruptedException ex) {
         }
 
     }
-//TODO check if needed
-//    public void setStudentID(int studentID) {
-//        this.studentID = studentID;
-//    }
-//
-//    public void setStudentState(Student_State newstate) {
-//        state = newstate;
-//    }
-//
 }
