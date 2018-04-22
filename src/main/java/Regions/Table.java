@@ -31,13 +31,11 @@ public class Table {
 
     private int exitCount;
 
-
     private final Kitchen kitchen;
 
     private final Semaphore getPadReady;
 
     private int studentCount, readyCounter, deliveredCounter, MaxStudents, MCourses;
-
 
     private GeneralRepo gr;
 
@@ -181,12 +179,16 @@ public class Table {
 
     /**
      * First student to arrive joins the talk
+     * @param StudentId
+     * @throws IOException 
      */
-    public void joinTheTalk() {
+    public void joinTheTalk(int StudentId) throws IOException {
         access.down();
         access.up();
 //        System.out.println("Table       Student     Student joins the talk");
         resetReadyCounter();
+        gr.updateStudentState(Student_State.CWC, StudentId);
+
     }
 
     /**
@@ -207,13 +209,14 @@ public class Table {
      * @param StudentId
      * @throws IOException
      */
-    public void startEating(int StudentId) throws IOException {
+    public void startEating(int StudentId) throws IOException, InterruptedException {
         waitingForFriendsToBeServed.down();
         studentChatting.down();
         access.down();
 //        System.out.println("Table       Student     Starts eating " + StudentId);
         gr.updateStudentState(Student_State.ETM, StudentId);
         access.up();
+        Thread.sleep(500);
     }
 
     /**
@@ -257,6 +260,8 @@ public class Table {
     public void shouldHaveArrivedEarlier(int StudentId) throws IOException {
         getReadyToPay.down();
         access.down();
+        gr.updateCourse(0);
+
 //        System.out.println("Table       Student     Should Have Arrived Earlier " + StudentId);
         bar.PayTheWaiter();
         gr.updateStudentState(Student_State.PTB, StudentId);

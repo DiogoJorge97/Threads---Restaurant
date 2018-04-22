@@ -24,7 +24,7 @@ public class Student extends Thread {
 
 
     
-    public Student(Table table, Bar bar, int MCourses, int MaxStudents, int id) {
+    public Student(Table table, Bar bar, GeneralRepo gr,int MCourses, int MaxStudents, int id) {
         this.table = table;
         this.bar = bar;
         this.MCourses = MCourses;
@@ -45,7 +45,7 @@ public class Student extends Thread {
                 }
                 bar.callTheWaiter();
                 table.describeTheOrder();
-                table.joinTheTalk();
+                table.joinTheTalk(studentID);
             } else {
                 table.informCompanion(studentID);
             }
@@ -66,13 +66,15 @@ public class Student extends Thread {
             table.exit(studentID);
         } catch (IOException ex) {
             Logger.getLogger(Student.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Student.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
 
-    private void WalkABit() {
+    private void WalkABit() throws IOException {
         try {
-            Thread.sleep((long) ((Math.random()*1500)+500));    
+            Thread.sleep((long) ((Math.random()*1500)+1000));    
         } catch (InterruptedException ex) {
         }
 

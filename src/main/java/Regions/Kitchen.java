@@ -27,7 +27,7 @@ public class Kitchen {
     private GeneralRepo gr;
 
     public Kitchen(Bar bar, GeneralRepo gr) {
-        this.bar = bar;    
+        this.bar = bar;
         this.CourseCounter = 1;
         this.PortionCounter = 0;
         this.access = new Semaphore();
@@ -38,23 +38,24 @@ public class Kitchen {
         this.chefWaitingForPortionDelivery = new Semaphore();
         this.waiterWaitingForPortion = new Semaphore();
         this.waitsForOrder = new Semaphore();
-        this.gr=gr;
+        this.gr = gr;
     }
-
 
     /**
      * Chef watches the news waiting for orders
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public void WatchTheNews() throws IOException {
 //        System.out.println("Kitchen     Chef        Watch the news");
         gr.updateChefState(Chef_State.WFO);
         chefWatchingTheNews.down();
     }
-    
+
     /**
      * Waiter hands order to the chef
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public void handTheNoteToTheChef() throws IOException {
         access.down();
@@ -66,20 +67,22 @@ public class Kitchen {
 
     /**
      * Chef starts preparing the first course
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public void StartPreparation() throws IOException {
         access.down();
 //        System.out.println("Kitchen     Chef        Start Course Preparation");
         gr.updateChefState(Chef_State.PTC);
+        gr.updateCourse(1);
         //increase course counter in repo by 1
         access.up();
     }
 
-    
     /**
      * Chef proceeds to dishing the portions
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public void ProceedToPresentation() throws IOException {
         access.down();
@@ -90,9 +93,10 @@ public class Kitchen {
     }
 
     /**
-     * Chef alerts the waiter to deliver the dishes 
+     * Chef alerts the waiter to deliver the dishes
+     *
      * @param deliveredCount
-     * @throws IOException 
+     * @throws IOException
      */
     public void AlertTheWaiter(int deliveredCount) throws IOException {
         access.down();
@@ -100,6 +104,7 @@ public class Kitchen {
         bar.CallTheWaitertoServe();
         if (deliveredCount == 0) {
             bar.waiterInTheBarUp();
+
 //            System.out.println("Kitchen     Chef        Alert the waiter Up");
         }
         gr.updateChefState(Chef_State.DLP);
@@ -109,7 +114,8 @@ public class Kitchen {
 
     /**
      * Waiter collects cooked portion
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public void collectPortion() throws IOException {
         waiterWaitingForPortion.down();
@@ -129,6 +135,7 @@ public class Kitchen {
 
     /**
      * Chef checks if all portions have been delivered
+     *
      * @param StudentSize
      * @return true of false
      */
@@ -140,10 +147,10 @@ public class Kitchen {
         return false;
     }
 
-
     /**
      * Chef starts preparing next portion
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public void haveNextPortionReady() throws IOException {
         chefWaitingForDelivery.down();
@@ -156,8 +163,9 @@ public class Kitchen {
 
     /**
      * Chef prepares next course and increments courseCounter
+     *
      * @param MaxRound
-     * @throws IOException 
+     * @throws IOException
      */
     public void ContinuePreparation(int MaxRound) throws IOException {
         bar.waitingForStudentsToFinishDown();
@@ -175,7 +183,8 @@ public class Kitchen {
 
     /**
      * Chef cleans up and gets ready to leave
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public void cleanup() throws IOException {
         access.down();
@@ -186,7 +195,8 @@ public class Kitchen {
     }
 
     /**
-     * Chef checks if order is completed 
+     * Chef checks if order is completed
+     *
      * @return true or false
      */
     public boolean HaveTheOrderBeenCompleted() {

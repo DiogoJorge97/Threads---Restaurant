@@ -16,14 +16,14 @@ import java.io.PrintWriter;
  * @author Ricardo Antão
  * @author Diogo Jorge
  */
-public class GeneralRepo {
+public final class GeneralRepo {
 
     private Chef_State chefstate;
     private Waiter_State waiterstate;
-    private final Student_State[] studentstates;
     private int courseCounter;
     private final String filename;
     private PrintWriter writer;
+    Student_State[] studentstates = {GTR,GTR,GTR,GTR,GTR,GTR,GTR};
 
     BufferedWriter bw = null;
     FileWriter fw = null;
@@ -32,12 +32,8 @@ public class GeneralRepo {
         //inicial states of entities
         waiterstate = ATS;
         chefstate = WFO;
-        studentstates = new Student_State[7];
-        for (Student_State studentstate : studentstates) {
-            studentstate = GTR;
-        }
-        
-        this.courseCounter = 1;
+
+        this.courseCounter = 0;
         this.filename = filename;
         
         initFile(filename);
@@ -51,10 +47,13 @@ public class GeneralRepo {
     public void initFile(String filename) throws IOException {
         fw = new FileWriter(filename);
         bw = new BufferedWriter(fw);
-        bw.append("  Course   CHEF         WAITER      ST1        ST2        ST3        ST4        ST5        ST6        ST7\n");
+        bw.append("  Course   CHEF         WAITER       ST1        ST2        ST3        ST4        ST5        ST6        ST7\n");
 
     }
-
+    /**
+     * Adds line with new states to the logger file
+     * @throws IOException 
+     */
     public void appendLine() throws IOException {
         bw.append("     " + courseCounter + "      " + chefstate + "          " + waiterstate + "         " + studentstates[0] + "        " + studentstates[1] + "        " + studentstates[2] + "        " + studentstates[3] + "        " + studentstates[4] + "        " + studentstates[5] + "        " + studentstates[6] + "\n");
     }

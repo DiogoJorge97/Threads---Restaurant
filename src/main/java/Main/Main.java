@@ -35,7 +35,7 @@ public class Main {
             Waiter waiter = new Waiter(kitchen, bar, table);
             Student[] students = new Student[MaxStudents];
             for (int id = 0; id < MaxStudents; id++) {
-                students[id] = new Student(table, bar, rounds, MaxStudents, id);
+                students[id] = new Student(table, bar, gr, rounds, MaxStudents, id);
             }
             
             //Starts threads
