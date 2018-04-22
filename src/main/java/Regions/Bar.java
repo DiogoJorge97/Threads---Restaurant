@@ -1,6 +1,8 @@
 package Regions;
 
+import Entities_states.Waiter_State;
 import Semaphore.Semaphore;
+import java.io.IOException;
 
 /**
  *
@@ -11,7 +13,8 @@ public class Bar {
 
     private final Semaphore access;
     private char situation;
-
+    private GeneralRepo gr;
+    private boolean presentBill = false;
     /**
      * Ponto de sincronização em que o waiter espera por uma situação no bar.
      */
@@ -19,23 +22,27 @@ public class Bar {
 
     private final Semaphore waitingForStudentsToFinish;
 
-    public Bar(int StudentSize) {
+    public Bar(int StudentSize, GeneralRepo gr) {
         this.waiterInTheBar = new Semaphore();
         this.waitingForStudentsToFinish = new Semaphore();
         this.access = new Semaphore();
         access.up();
+        this.gr = gr;
     }
 
     public void waiterInTheBarUp() {
         waiterInTheBar.up();
     }
 
-    public char lookAround() {
-        waiterInTheBar.down();
+    public char lookAround() throws IOException {
         access.down();
         System.out.println("Bar         Waiter      Looks around: " + situation);
-        //state ATS
+        gr.updateWaiterState(Waiter_State.ATS);
         access.up();
+        if (presentBill == true) {
+        }
+        waiterInTheBar.down();
+
         return situation;
     }
 
@@ -54,18 +61,19 @@ public class Bar {
 
     }
 
-    public void returnToTheBar() {
+    public void returnToTheBar() throws IOException {
         access.down();
         System.out.println("Bar         Waiter      Return to the bar");
         System.out.println("-----------------------------------------");
-        //state to ATS
+        gr.updateWaiterState(Waiter_State.ATS);
         access.up();
     }
 
     //Waiter Methods
-    public void prepareTheBill() {
-        //state ATS to PTB
+    public void prepareTheBill() throws IOException {
+        gr.updateWaiterState(Waiter_State.PTB);
         System.out.println("Bar         Waiter      Prepare the bill");
+        presentBill = true;
     }
 
     public void SignalTheWaiter() {
@@ -110,6 +118,14 @@ public class Bar {
         access.down();
         changeSituation('g');
         waiterInTheBar.up();
+        access.up();
+    }
+
+    void waiterGoHome() {
+        access.down();
+        changeSituation('e');
+        waiterInTheBar.up();
+        System.out.println("Bar         Waiter      Go home");
         access.up();
     }
 

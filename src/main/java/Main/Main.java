@@ -11,8 +11,9 @@ import Entities.Waiter;
 import Regions.Bar;
 import Regions.Kitchen;
 import Regions.Table;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import Regions.GeneralRepo;
+import java.io.IOException;
+
 
 /**
  * Restaurant Versão Concurrente
@@ -21,18 +22,21 @@ import java.util.logging.Logger;
  * @author Diogo Jorge
  */
 public class Main {
+
     //TODO Check all authors
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         try {
             //7 Students, 1 waiter, 1 chef and 3 courses
             int MaxStudents = 7;
             int rounds = 3;
+            String filename = "src/main/java/Main/logger.txt";
+            GeneralRepo gr = new GeneralRepo(filename);
+            Thread.sleep(5000);
+            Bar bar = new Bar(MaxStudents, gr);
+            Kitchen kitchen = new Kitchen(bar, gr);
+            Table table = new Table(MaxStudents, rounds, bar, kitchen, gr);
 
-            Bar bar = new Bar(MaxStudents);
-            Kitchen kitchen = new Kitchen(bar);
-            Table table = new Table(MaxStudents, rounds, bar, kitchen);
-
-            Chef chef = new Chef(kitchen, bar, rounds, MaxStudents);
+            Chef chef = new Chef(kitchen, rounds, MaxStudents);
             Waiter waiter = new Waiter(kitchen, bar, table);
             Student[] students = new Student[MaxStudents];
             for (int id = 0; id < MaxStudents; id++) {
@@ -43,18 +47,17 @@ public class Main {
             waiter.start();
             //System.out.println("waiter " + waiter.getName());
 
-
             for (int i = 0; i < MaxStudents; i++) {
                 students[i].start();
                 Thread.sleep(1000);
                 //System.out.println("student[" + i + "] "  + students[i].getName());
             }
-            
             chef.join();
-            waiter.join();
             for (int i = 0; i < MaxStudents; i++) {
                 students[i].join();
             }
+            waiter.join();
+            gr.closeWriter();
 
         } catch (InterruptedException ex) {
         }

@@ -9,6 +9,9 @@ import Entities_states.Waiter_State;
 import Regions.Bar;
 import Regions.Kitchen;
 import Regions.Table;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -40,41 +43,45 @@ public class Waiter extends Thread {
 
     @Override
     public void run() {
-        //Teacher Method
-        //alt1 = n
-        //alt2 = o
-        //alt3 = e
-        //alt4 = p
-        //alt5 = g
-        //alt6 = E
-        char alt;
-        while ((alt = bar.lookAround()) != 'E') {
-            switch (alt) {
-                case 'n':
-                    table.saluteTheClient();
-                    break;
-                case 'o':
-                    table.getThePad();
-                    kitchen.handTheNoteToTheChef();
-                    break;
-                case 'c':
-                    do {
-                        kitchen.collectPortion();
-                        table.deliverPortion();
-                    } while (!table.haveAllClientsBeenServed());
-                    table.resetDeliveredCounter();
-                    break;
-                case 'p':
-                    bar.prepareTheBill();
-                    table.presentTheBill();
-                    break;
-                case 'g':
-                    table.sayGoodbye();
-                    break;
+        try {
+            //Teacher Method
+            //alt1 = n
+            //alt2 = o
+            //alt3 = e
+            //alt4 = p
+            //alt5 = g
+            //alt6 = E
+            char alt;
+            while ((alt = bar.lookAround()) != 'e') {
+                switch (alt) {
+                    case 'n':
+                        table.saluteTheClient();
+                        break;
+                    case 'o':
+                        table.getThePad();
+                        kitchen.handTheNoteToTheChef();
+                        break;
+                    case 'c':
+                        do {
+                            kitchen.collectPortion();
+                            table.deliverPortion();
+                        } while (!table.haveAllClientsBeenServed());
+                        table.resetDeliveredCounter();
+                        break;
+                    case 'p':
+                        bar.prepareTheBill();
+                        table.presentTheBill();
+                        break;
+                    case 'g':
+                        table.sayGoodbye();
+                        break;
+                }
+                if (alt != 'g') {
+                    bar.returnToTheBar();
+                }
             }
-            if (alt != 'g') {
-                bar.returnToTheBar();
-            }
+        } catch (IOException ex) {
+            Logger.getLogger(Waiter.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }

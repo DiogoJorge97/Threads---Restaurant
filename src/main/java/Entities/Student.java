@@ -8,6 +8,8 @@ package Entities;
 import Entities_states.Student_State;
 import Regions.Bar;
 import Regions.Table;
+import Regions.GeneralRepo;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +38,7 @@ public class Student extends Thread {
     private final int MCourses;
     private final int MaxStudents;
     private int studentID;
+    private GeneralRepo gr;
 
     public Student(Table table, Bar bar, int MCourses, int MaxStudents, int id) {
         this.table = table;
@@ -43,42 +46,47 @@ public class Student extends Thread {
         this.MCourses = MCourses;
         this.MaxStudents = MaxStudents;
         this.studentID = id;
+        //gr.updateStudentState(Student_State.GTR, studentID);
 
     }
 
     //Teacher Method
     @Override
     public void run() {
-        WalkABit();
-        int arrivalOrder;
-        arrivalOrder = table.enter();
-        table.readTheMenu(studentID); //TODO delete entry variable, only used for print
-        if (arrivalOrder == 1) {
-            while (!table.hasEverybodyChosen()) {
-                table.prepareTheOrder();
+        try {
+            WalkABit();
+            int arrivalOrder;
+            arrivalOrder = table.enter(studentID);
+            table.readTheMenu(studentID); //TODO delete entry variable, only used for print
+            if (arrivalOrder == 1) {
+                while (!table.hasEverybodyChosen()) {
+                    table.prepareTheOrder(studentID);
+                }
+                bar.callTheWaiter();
+                table.describeTheOrder();
+                table.joinTheTalk();
+            } else {
+                table.informCompanion(studentID);
             }
-            bar.callTheWaiter();
-            table.describeTheOrder();
-            table.joinTheTalk();
-        } else {
-            table.informCompanion();
-        }
 
-        for (int i = 0; i < MCourses; i++) {
-            table.startEating(studentID);   //TODO delete entry variable, only used for print
-            table.endEating(studentID); //TODO delete entry variable, only used for print
-            if (table.hasEverybodyFinished(i)) {
-//            if (table.hasEverybodyFinished()) {    
-                if (i != (MCourses - 1)) {
-                    bar.SignalTheWaiter();
+            for (int i = 0; i < MCourses; i++) {
+                table.startEating(studentID);   //TODO delete entry variable, only used for print
+                table.endEating(studentID); //TODO delete entry variable, only used for print
+                if (table.hasEverybodyFinished(i)) {
+//            if (table.hasEverybodyFinished()) {
+                    if (i != (MCourses - 1)) {
+                        bar.SignalTheWaiter();
+                    }
                 }
             }
+            if (arrivalOrder == (MaxStudents)) {
+                table.shouldHaveArrivedEarlier(studentID);  //TODO delete entry variable, only used for print
+                table.honorTheBill();
+            }
+            table.exit(studentID);
+        } catch (IOException ex) {
+            Logger.getLogger(Student.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (arrivalOrder == (MaxStudents)) {
-            table.shouldHaveArrivedEarlier(studentID);  //TODO delete entry variable, only used for print
-            table.honorTheBill();
-        }
-        table.exit(studentID);
 
     }
 

@@ -1,6 +1,9 @@
 package Regions;
 
 import Semaphore.Semaphore;
+import Entities_states.Chef_State;
+import Entities_states.Waiter_State;
+import java.io.IOException;
 
 /**
  *
@@ -47,8 +50,9 @@ public class Kitchen {
 
     private int CourseCounter;
     private int PortionCounter;
+    private GeneralRepo gr;
 
-    public Kitchen(Bar bar) {
+    public Kitchen(Bar bar, GeneralRepo gr) {
         this.bar = bar;     //TODO check if it is needed
         this.CourseCounter = 0;
         this.PortionCounter = 0;
@@ -60,22 +64,23 @@ public class Kitchen {
         this.chefWaitingForPortionDelivery = new Semaphore();
         this.waiterWaitingForPortion = new Semaphore();
         this.waitsForOrder = new Semaphore();
-
+        this.gr=gr;
     }
 
     /**
      * Operação de aguardar por uma encomenda.
      */
-    public void WatchTheNews() {
+    public void WatchTheNews() throws IOException {
         System.out.println("Kitchen     Chef        Watch the news");
+        gr.updateChefState(Chef_State.WFO);
         chefWatchingTheNews.down();
     }
 
-    public void handTheNoteToTheChef() {
+    public void handTheNoteToTheChef() throws IOException {
 //        waitsForOrder.down();
         access.down();
         System.out.println("Kitchen     Waiter      Hand the note to the chef");
-        //state from TTO to PTO
+        gr.updateWaiterState(Waiter_State.PTO);
         chefWatchingTheNews.up();
         access.up();
 //        waiterHandTheNoteToTheChef.down();
@@ -84,19 +89,18 @@ public class Kitchen {
 //    public void waitsForOrderUp() {
 //        waitsForOrder.up();
 //    }
-
-    public void StartPreparation() {
+    public void StartPreparation() throws IOException {
         access.down();
         System.out.println("Kitchen     Chef        Start Course Preparation");
-        //state from WFO to PTC
+        gr.updateChefState(Chef_State.PTC);
         //increase course counter in repo by 1
         access.up();
     }
 
-    public void ProceedToPresentation() {
+    public void ProceedToPresentation() throws IOException {
         access.down();
         System.out.println("Kitchen     Chef        Proceed to presentation");
-        //state from PTC to DTP
+        gr.updateChefState(Chef_State.DIP);
         access.up();
 
     }
@@ -105,25 +109,25 @@ public class Kitchen {
      * Operação de alertar o empregado de mesa que uma porção está pronta a
      * entregar.
      */
-    public void AlertTheWaiter(int st) {
+    public void AlertTheWaiter(int st) throws IOException {
 //        chefWaitingForPortionDelivery.down();
         access.down();
         System.out.println("Kitchen     Chef        Alert the waiter");
         bar.CallTheWaitertoServe();
-        if (st==0){
+        if (st == 0) {
             bar.waiterInTheBarUp();
             System.out.println("Kitchen     Chef        Alert the waiter Up");
         }
-        //state from DTP to DP
+        gr.updateChefState(Chef_State.DLP);
         access.up();
         waiterWaitingForPortion.up();
     }
 
-    public void collectPortion() {
+    public void collectPortion() throws IOException {
         waiterWaitingForPortion.down();
         access.down();
         System.out.println("Kitchen     Waiter      Collect Portion " + PortionCounter);
-        //state from AS to WFP
+        gr.updateWaiterState(Waiter_State.WFP);
 //        chefWaitingForPortionDelivery.up();
         PortionCounter++;
         access.up();
@@ -150,12 +154,13 @@ public class Kitchen {
     /**
      * Operação para preparação da próxima porção.
      */
-    public void haveNextPortionReady() {
-        access.down();
-        System.out.println("Kitchen     Chef        Have Next Portion Ready");
-        //state from DP to DTP
-        access.up();
+    public void haveNextPortionReady() throws IOException {
         chefWaitingForDelivery.down();
+        access.down();
+        gr.updateChefState(Chef_State.DIP);
+        System.out.println("Kitchen     Chef        Have Next Portion Ready");
+        access.up();
+
     }
 
     /**
@@ -163,12 +168,11 @@ public class Kitchen {
      *
      * @param MaxRound
      */
-    public void ContinuePreparation(int MaxRound) {
+    public void ContinuePreparation(int MaxRound) throws IOException {
         bar.waitingForStudentsToFinishDown();
         access.down();
         System.out.println("Kitchen     Chef        Continue Preparation");
-        //increase course counter in repo by 1
-        //state from DP to PTC
+        gr.updateChefState(Chef_State.PTC);
         PortionCounter = 0;
         CourseCounter++;
         if (CourseCounter == MaxRound - 1) {
@@ -180,10 +184,10 @@ public class Kitchen {
     /**
      * Operação de fecho.
      */
-    public void cleanup() {
+    public void cleanup() throws IOException {
         access.down();
         System.out.println("Kitchen     Chef        Cleanup");
-        //state from DP to CS
+        gr.updateChefState(Chef_State.CTS);
         access.up();
 
     }

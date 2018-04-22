@@ -8,6 +8,9 @@ package Entities;
 import Entities_states.Chef_State;
 import Regions.Bar;
 import Regions.Kitchen;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -24,40 +27,40 @@ public class Chef extends Thread {
         Delivering the portions - kitchen
     
      */
-    private Kitchen kitchen;
-    private Bar bar;
-    private Chef_State state;
-    private int MaxRound;
-    private int StudentNumber;
+    private final Kitchen kitchen;
+    private final int MaxRound;
+    private final int StudentNumber;
 
-    public Chef(Kitchen kitchen, Bar bar,int MaxRound, int StudentNumber) {
+    public Chef(Kitchen kitchen, int MaxRound, int StudentNumber) {
         this.kitchen = kitchen;
-        this.bar = bar;
         this.MaxRound = MaxRound;
         this.StudentNumber = StudentNumber;
-        this.state = Chef_State.WFO;
     }
 
     @Override
     public void run() {
 
-        kitchen.WatchTheNews();
-        kitchen.StartPreparation();
-        for (int rounds = 0; rounds < MaxRound; rounds++) {
-            kitchen.ProceedToPresentation();
-            for (int st = 0; st < StudentNumber; st++) {
-                kitchen.AlertTheWaiter(st);
-                if (!kitchen.AllPortionsBeenDelivered(StudentNumber)) {
+        try {
+            kitchen.WatchTheNews();
+            kitchen.StartPreparation();
+            for (int rounds = 0; rounds < MaxRound; rounds++) {
+                kitchen.ProceedToPresentation();
+                for (int st = 0; st < StudentNumber; st++) {
+                    kitchen.AlertTheWaiter(st);
+                    if (!kitchen.AllPortionsBeenDelivered(StudentNumber)) {
 //              if (!kitchen.AllPortionsBeenDelivered(StudentNumber)) {
-                    kitchen.haveNextPortionReady();
+                        kitchen.haveNextPortionReady();
+                    }
+                }
+                if (!kitchen.HaveTheOrderBeenCompleted()) {
+                    kitchen.ContinuePreparation(MaxRound);
+//                kitchen.ContinuePreparation();
                 }
             }
-            if (!kitchen.HaveTheOrderBeenCompleted()) {
-                kitchen.ContinuePreparation(MaxRound);
-//                kitchen.ContinuePreparation();
-            }
+            kitchen.cleanup();
+        } catch (IOException ex) {
+            Logger.getLogger(Chef.class.getName()).log(Level.SEVERE, null, ex);
         }
-        kitchen.cleanup();
 
     }
 }
